@@ -1,9 +1,0 @@
-RutaRentable PRO 3.6 - Módulo Usuarios separado
-
-- El módulo de administración de usuarios ya no aparece dentro de Configuración.
-- Se agregó "Usuarios" al menú lateral izquierdo.
-- "Usuarios" solo es visible para el administrador jbonilla2987@gmail.com.
-- Los usuarios normales no ven ese botón ni pueden abrir el módulo desde la interfaz.
-- Desde Usuarios se mantienen las acciones Aprobar, Rechazar y Bloquear.
-- Se actualizó la caché de la PWA para evitar que quede cargada la interfaz anterior.
-- El mismo index.html se incluye en raíz (GitHub Pages) y en public/ (Firebase Hosting).
