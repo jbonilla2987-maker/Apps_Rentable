@@ -1,0 +1,8 @@
+RutaRentable PRO Web 3.7.0
+
+- Mantiene todas las funciones de la versión 3.6.9.
+- El mapa administrativo reconoce cuando una ubicación proviene del servicio nativo Android en segundo plano.
+- Muestra "Android · segundo plano" junto a velocidad, precisión y última señal.
+- Las reglas de Firestore permanecen compatibles con liveLocations/{uid}.
+
+Para el rastreo persistente con pantalla apagada debes instalar la APK Android 3.7.0 incluida como paquete separado.
