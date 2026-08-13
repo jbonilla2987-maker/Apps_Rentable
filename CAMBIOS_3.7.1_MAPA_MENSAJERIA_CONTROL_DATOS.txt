@@ -1,0 +1,38 @@
+RutaRentable PRO 3.7.1 WEB
+
+Cambios sobre la versión 3.7.0:
+
+1. MAPA DE RASTREO MÁS GRANDE
+- El mapa ahora ocupa todo el ancho del módulo de Rastreo.
+- Altura ampliada para aprovechar mejor pantallas de PC.
+- La lista de celulares aparece debajo del mapa.
+
+2. MODO CELULAR ELIMINADO DE CONFIGURACIÓN
+- Se eliminó la tarjeta visual "Modo celular".
+- No se modificó el rastreo GPS ni la PWA existente.
+
+3. ELIMINACIÓN DE DATOS BAJO APROBACIÓN
+- El usuario ya no puede borrar directamente sus datos.
+- En Configuración solo puede enviar una solicitud de eliminación.
+- El administrador ve la solicitud en Usuarios.
+- El administrador puede Aprobar borrado o Rechazar.
+- Al aprobar, se eliminan jornadas, gastos, vehículos, configuración, ubicación, soporte y conversaciones asociadas; el acceso queda bloqueado.
+- La cuenta de Firebase Authentication no se borra desde el navegador. Para borrado físico de Auth se requiere backend con Firebase Admin SDK / Cloud Function.
+
+4. SOPORTE INTERNO
+- Nuevo módulo Soporte.
+- El usuario puede enviar mensajes al administrador desde RutaRentable.
+- El administrador puede ver todas las conversaciones y responder.
+- No se agregó WhatsApp.
+
+5. CHAT ENTRE USUARIOS
+- Nuevo módulo Chat usuarios.
+- Solo usuarios aprobados pueden participar.
+- Cada conversación es privada para sus dos participantes.
+- El directorio de chat publica solo nombre/foto técnica; no expone correo a otros usuarios.
+
+6. JSON ADMINISTRADOR
+- Se conserva el botón JSON por usuario en el módulo Usuarios.
+
+IMPORTANTE
+Publicar también firestore.rules/FIRESTORE_REGLAS.txt para habilitar mensajería, solicitudes y control de borrado.

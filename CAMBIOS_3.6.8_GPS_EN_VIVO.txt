@@ -1,0 +1,12 @@
+RutaRentable PRO 3.6.8 - GPS EN VIVO
+
+Cambios sobre la version 3.6 + mapa:
+- Rastreo en tiempo casi real con marcador actualizado por Firestore.
+- Muestra En linea / Senal reciente / Desconectado.
+- Muestra velocidad en km/h, precision GPS y ultima senal exacta + tiempo transcurrido.
+- Estado En movimiento / Detenido.
+- El estado se refresca cada 10 segundos aunque el telefono deje de enviar senal.
+- La pagina compartir-gps calcula velocidad por GPS y usa distancia/tiempo como respaldo.
+- Solo el administrador puede ver el mapa general.
+
+No se cambiaron las reglas de negocio de jornadas, gastos o reportes.
