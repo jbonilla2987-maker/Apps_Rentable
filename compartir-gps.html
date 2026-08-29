@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#08172e">
+  <title>RutaRentable · Compartir GPS</title>
+  <style>
+    :root{--navy:#08172e;--green:#14b86b;--blue:#1769e0;--text:#172334;--muted:#66778b;--line:#dfe6ee;--bg:#f2f5f8;--red:#d84355}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#eef4fa,#f8fafc);color:var(--text);padding:18px}
+    .wrap{width:min(620px,100%);margin:0 auto}.brand{display:flex;align-items:center;gap:11px;margin:12px 0 20px}.logo{width:44px;height:44px;border-radius:14px;background:var(--navy);color:#38e595;display:grid;place-items:center;font-size:23px;font-weight:900}.brand strong{font-size:20px}.brand strong span{color:var(--green)}.brand small{display:block;color:var(--muted);margin-top:2px}
+    .card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:22px;box-shadow:0 18px 48px rgba(20,42,74,.08);margin-bottom:14px}.card h1,.card h2{margin:0}.card p{color:var(--muted);line-height:1.55}.status{display:flex;align-items:center;gap:10px;padding:13px 14px;border-radius:13px;background:#f5f8fc;margin:16px 0}.dot{width:11px;height:11px;border-radius:50%;background:#9aa8b8}.status.live{background:#e9f9f1;color:#226845}.status.live .dot{background:#19b56d;box-shadow:0 0 0 7px rgba(25,181,109,.12)}.status.error{background:#fff0f2;color:#9c2d40}.status.error .dot{background:var(--red)}
+    .button{width:100%;border:0;border-radius:13px;padding:13px 15px;font-weight:850;font-size:15px;cursor:pointer}.primary{background:var(--navy);color:#fff}.stop{background:#fff0f2;color:#a22f43;border:1px solid #ffd2d9;margin-top:9px}.secondary{background:#eef3fa;color:#27445f;margin-top:9px}.button:disabled{opacity:.55;cursor:not-allowed}.hidden{display:none!important}
+    .user{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:14px;margin:14px 0}.avatar{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:#eef3fa;font-weight:900}.user strong,.user small{display:block}.user small{color:var(--muted);margin-top:2px;overflow-wrap:anywhere}.facts{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px}.fact{padding:11px;border:1px solid var(--line);border-radius:12px;background:#fbfcfe}.fact span{display:block;color:var(--muted);font-size:11px}.fact strong{display:block;margin-top:4px}.note{font-size:12px;color:var(--muted);line-height:1.5}.secure{display:flex;gap:9px;align-items:flex-start;background:#f7fafc;border:1px solid var(--line);border-radius:13px;padding:12px;margin-top:14px;font-size:12px;color:#52657b;line-height:1.5}
+    @media(max-width:520px){body{padding:12px}.card{padding:18px}.facts{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="brand"><div class="logo">↗</div><div><strong>Ruta<span>Rentable</span></strong><small>Compartir ubicación GPS</small></div></div>
+
+    <section class="card">
+      <h1>Compartir ubicación desde este celular</h1>
+      <p>Esta página permite que el administrador de RutaRentable vea tu ubicación mientras mantengas el rastreo activo. La ubicación no se comparte hasta que tú presiones el botón y aceptes el permiso del celular.</p>
+
+      <div id="userBox" class="user hidden">
+        <div class="avatar" id="avatar">RR</div>
+        <div><strong id="userName">Usuario</strong><small id="userEmail"></small></div>
+      </div>
+
+      <div class="status" id="statusBox"><span class="dot"></span><strong id="statusText">Inicia sesión para continuar.</strong></div>
+
+      <button class="button primary" id="loginButton" type="button">Continuar con Google</button>
+      <button class="button primary hidden" id="startButton" type="button">📍 Compartir mi ubicación</button>
+      <button class="button stop hidden" id="stopButton" type="button">■ Detener ubicación</button>
+      <button class="button secondary hidden" id="logoutButton" type="button">Cerrar sesión</button>
+
+      <div class="facts hidden" id="facts">
+        <div class="fact"><span>Precisión GPS</span><strong id="accuracyValue">—</strong></div>
+        <div class="fact"><span>Última actualización</span><strong id="updatedValue">—</strong></div>
+      </div>
+
+      <div class="secure"><span>🔒</span><span>Solo tu cuenta puede actualizar su propia ubicación. El mapa general está reservado a la cuenta administradora de RutaRentable.</span></div>
+    </section>
+
+    <p class="note">Para usar GPS desde el navegador, esta página debe abrirse desde HTTPS (por ejemplo Firebase Hosting o GitHub Pages). El rastreo funciona mientras esta página permanece abierta y el sistema operativo permite actualizar la ubicación.</p>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBunQSM7YUaHqY-335xQqGO_idyUFy8lJQ",
+      authDomain: "rutarentable-pro.firebaseapp.com",
+      projectId: "rutarentable-pro",
+      storageBucket: "rutarentable-pro.firebasestorage.app",
+      messagingSenderId: "19050578520",
+      appId: "1:19050578520:web:e1c50e7f95f3781d1f402d"
+    };
+    const ADMIN_EMAIL = "jbonilla2987@gmail.com";
+    const ACCESS_COLLECTION = "accessRequests";
+    const LIVE_LOCATION_COLLECTION = "liveLocations";
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    await setPersistence(auth, browserLocalPersistence);
+    const db = getFirestore(app);
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt:"select_account" });
+
+    const $ = id => document.getElementById(id);
+    let currentUser = null;
+    let watchId = null;
+
+    function norm(value){ return String(value || "").trim().toLowerCase(); }
+    function setStatus(text, kind=""){
+      $("statusText").textContent = text;
+      $("statusBox").className = `status ${kind}`.trim();
+    }
+    function formatTime(value){
+      return new Intl.DateTimeFormat("es-PA", {hour:"2-digit",minute:"2-digit",second:"2-digit"}).format(new Date(value));
+    }
+    function setUser(user){
+      if(!user){ $("userBox").classList.add("hidden"); return; }
+      const name = user.displayName || user.email?.split("@")[0] || "Usuario";
+      $("userName").textContent = name;
+      $("userEmail").textContent = user.email || "";
+      $("avatar").textContent = name.split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]?.toUpperCase()||"").join("") || "RR";
+      $("userBox").classList.remove("hidden");
+    }
+    async function isApproved(user){
+      if(norm(user.email) === ADMIN_EMAIL) return true;
+      const snap = await getDoc(doc(db, ACCESS_COLLECTION, user.uid));
+      return snap.exists() && snap.data()?.status === "approved";
+    }
+    async function login(){
+      try{ await signInWithPopup(auth, provider); }
+      catch(error){
+        if(["auth/popup-blocked","auth/operation-not-supported-in-this-environment","auth/cancelled-popup-request"].includes(error.code)) return signInWithRedirect(auth, provider);
+        if(error.code !== "auth/popup-closed-by-user") setStatus(error.message || "No se pudo iniciar sesión.", "error");
+      }
+    }
+    async function writeLocation(position){
+      if(!currentUser) return;
+      const now = Date.now();
+      const c = position.coords;
+      await setDoc(doc(db, LIVE_LOCATION_COLLECTION, currentUser.uid), {
+        uid: currentUser.uid,
+        email: currentUser.email || "",
+        displayName: currentUser.displayName || currentUser.email?.split("@")[0] || "Usuario",
+        lat: Number(c.latitude),
+        lng: Number(c.longitude),
+        accuracy: Number(c.accuracy || 0),
+        heading: Number.isFinite(c.heading) ? Number(c.heading) : null,
+        speed: Number.isFinite(c.speed) ? Number(c.speed) : null,
+        active: true,
+        source: "mobile-web",
+        updatedAtClient: now,
+        updatedAt: serverTimestamp()
+      }, { merge:true });
+      $("accuracyValue").textContent = `${Math.round(Number(c.accuracy || 0))} m`;
+      $("updatedValue").textContent = formatTime(now);
+      $("facts").classList.remove("hidden");
+      setStatus("Compartiendo ubicación con RutaRentable.", "live");
+    }
+    async function startSharing(){
+      if(!currentUser) return;
+      if(!window.isSecureContext) return setStatus("El GPS requiere abrir esta página mediante HTTPS.", "error");
+      if(!("geolocation" in navigator)) return setStatus("Este celular o navegador no permite geolocalización.", "error");
+      $("startButton").disabled = true;
+      setStatus("Solicitando permiso de ubicación…");
+      watchId = navigator.geolocation.watchPosition(position => {
+        writeLocation(position).catch(error => setStatus(error.message || "No se pudo guardar la ubicación.", "error"));
+      }, error => {
+        const messages = {1:"No se autorizó el acceso a la ubicación.",2:"No se pudo obtener la ubicación.",3:"El GPS tardó demasiado en responder."};
+        setStatus(messages[error.code] || error.message || "Error de GPS.", "error");
+        $("startButton").disabled = false;
+      }, { enableHighAccuracy:true, maximumAge:5000, timeout:20000 });
+      $("startButton").classList.add("hidden");
+      $("stopButton").classList.remove("hidden");
+      $("startButton").disabled = false;
+    }
+    async function stopSharing(){
+      if(watchId !== null){ navigator.geolocation.clearWatch(watchId); watchId = null; }
+      if(currentUser){
+        try{ await setDoc(doc(db, LIVE_LOCATION_COLLECTION, currentUser.uid), {active:false,updatedAtClient:Date.now(),updatedAt:serverTimestamp()}, {merge:true}); }catch{}
+      }
+      setStatus("Ubicación detenida.");
+      $("stopButton").classList.add("hidden");
+      $("startButton").classList.remove("hidden");
+    }
+
+    $("loginButton").addEventListener("click", login);
+    $("startButton").addEventListener("click", startSharing);
+    $("stopButton").addEventListener("click", stopSharing);
+    $("logoutButton").addEventListener("click", async()=>{ await stopSharing(); await signOut(auth); });
+    try{ await getRedirectResult(auth); }catch{}
+
+    onAuthStateChanged(auth, async user => {
+      currentUser = user;
+      setUser(user);
+      if(!user){
+        $("loginButton").classList.remove("hidden");
+        $("startButton").classList.add("hidden");
+        $("stopButton").classList.add("hidden");
+        $("logoutButton").classList.add("hidden");
+        setStatus("Inicia sesión para continuar.");
+        return;
+      }
+      $("loginButton").classList.add("hidden");
+      $("logoutButton").classList.remove("hidden");
+      setStatus("Comprobando autorización…");
+      try{
+        if(!(await isApproved(user))){
+          setStatus("Esta cuenta todavía no está aprobada para utilizar RutaRentable.", "error");
+          $("startButton").classList.add("hidden");
+          return;
+        }
+        $("startButton").classList.remove("hidden");
+        setStatus("Cuenta autorizada. Presiona el botón para compartir tu GPS.");
+      }catch(error){ setStatus(error.message || "No se pudo comprobar el acceso.", "error"); }
+    });
+
+    window.addEventListener("pagehide", ()=>{
+      if(watchId !== null) navigator.geolocation.clearWatch(watchId);
+    });
+  </script>
+</body>
+</html>
